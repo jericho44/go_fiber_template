@@ -400,6 +400,46 @@ go run cmd/migrate/main.go version
 
 # Force migration version (use carefully!)
 go run cmd/migrate/main.go force 20250125103000
+
+### Database Seeders
+
+The template includes a comprehensive database seeding system for populating your database with initial or test data.
+
+#### Quick Start
+
+```bash
+# Run all seeders
+go run cmd/seed/main.go run --all
+
+# Run environment-specific seeders (recommended)
+go run cmd/seed/main.go run --env
+
+# Check seeder status
+go run cmd/seed/main.go status
+
+# List available seeders
+go run cmd/seed/main.go list
+```
+
+#### Available Seeders
+
+- **user_seeder**: Creates sample admin and regular users
+- **demo_data_seeder**: Creates comprehensive demo data (development only)
+
+#### Seeder Commands
+
+```bash
+# Run specific seeders
+go run cmd/seed/main.go run user_seeder demo_data_seeder
+
+# Rollback seeders
+go run cmd/seed/main.go rollback user_seeder
+
+# Rollback all seeders
+go run cmd/seed/main.go rollback --all
+```
+
+For detailed information about creating custom seeders and advanced usage, see [Seeder System Documentation](docs/SEEDER_SYSTEM.md).
 ```
 
 ### Testing
