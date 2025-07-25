@@ -165,3 +165,27 @@ func GetErrorDetails(err error) map[string]string {
 	}
 	return nil
 }
+
+// GetIntCodeFromString converts string error codes to integer codes for ErrorResponse
+func GetIntCodeFromString(code string) int {
+	switch code {
+	case "BAD_REQUEST":
+		return CodeBadRequest
+	case "UNAUTHORIZED":
+		return CodeUnauthorized
+	case "FORBIDDEN":
+		return CodeForbidden
+	case "NOT_FOUND":
+		return CodeNotFound
+	case "VALIDATION_ERROR":
+		return CodeValidationError
+	case "CONFLICT":
+		return CodeBadRequest // Using 400 for conflict as it's a client error
+	case "TOO_MANY_REQUESTS":
+		return CodeTooManyRequests
+	case "INTERNAL_SERVER_ERROR":
+		return CodeInternalServerError
+	default:
+		return CodeInternalServerError
+	}
+}

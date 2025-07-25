@@ -14,13 +14,13 @@ func ErrorHandler() fiber.ErrorHandler {
 	return func(c *fiber.Ctx, err error) error {
 		// Check if it's a custom AppError
 		if appErr, ok := utils.AsAppError(err); ok {
-			return utils.ErrorResponse(c, appErr.StatusCode, appErr.Code, appErr.Message, appErr.Details)
+			return utils.ErrorResponse(c, appErr.StatusCode, utils.GetIntCodeFromString(appErr.Code), appErr.Message, appErr.Details)
 		}
 
 		// Check if it's a Fiber error
 		if fiberErr, ok := err.(*fiber.Error); ok {
 			code := getErrorCodeFromStatus(fiberErr.Code)
-			return utils.ErrorResponse(c, fiberErr.Code, code, fiberErr.Message, nil)
+			return utils.ErrorResponse(c, fiberErr.Code, utils.GetIntCodeFromString(code), fiberErr.Message, nil)
 		}
 
 		// Log unexpected errors
@@ -74,7 +74,7 @@ func RecoverMiddleware() fiber.Handler {
 				err := utils.NewInternalServerError("Internal server error", nil)
 
 				// Use the error handler to respond
-				utils.ErrorResponse(c, err.StatusCode, err.Code, err.Message, err.Details)
+				utils.ErrorResponse(c, err.StatusCode, utils.GetIntCodeFromString(err.Code), err.Message, err.Details)
 			}
 		}()
 

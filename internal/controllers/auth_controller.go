@@ -100,7 +100,7 @@ func (ac *AuthController) Register(c *fiber.Ctx) error {
 			case "VALIDATION_ERROR":
 				return utils.ValidationErrorResponse(c, appErr.Details)
 			case "CONFLICT":
-				return utils.ErrorResponse(c, 409, "CONFLICT", appErr.Message, nil)
+				return utils.ErrorResponse(c, 409, utils.CodeBadRequest, appErr.Message, nil)
 			default:
 				return utils.InternalServerErrorResponse(c, "Registration failed")
 			}
