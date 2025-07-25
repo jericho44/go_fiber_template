@@ -1,0 +1,367 @@
+# =============================================================================
+# Go Fiber Template - .gitignore
+# =============================================================================
+
+# =============================================================================
+# Go Language Specific
+# =============================================================================
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+server
+migrate
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+*.cover
+coverage.html
+coverage.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Go module cache
+go.sum.backup
+
+# =============================================================================
+# Environment & Configuration
+# =============================================================================
+
+# Environment variables (NEVER commit these!)
+.env
+.env.*
+!.env.example
+
+# Configuration files with secrets
+config.json
+config.yaml
+config.yml
+secrets.json
+
+# =============================================================================
+# Build & Distribution
+# =============================================================================
+
+# Build artifacts
+bin/
+build/
+dist/
+out/
+target/
+
+# Compiled binaries
+/server
+/migrate
+/main
+*.bin
+
+# =============================================================================
+# Development Tools & IDEs
+# =============================================================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json.example
+
+# GoLand / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Atom
+.atom/
+
+# =============================================================================
+# Operating System Files
+# =============================================================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# Logs & Temporary Files
+# =============================================================================
+
+# Log files
+*.log
+logs/
+log/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# =============================================================================
+# Database Files
+# =============================================================================
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# PostgreSQL
+*.pgsql
+
+# Database dumps
+*.sql
+*.dump
+
+# =============================================================================
+# Testing & Coverage
+# =============================================================================
+
+# Test coverage
+coverage/
+.coverage
+htmlcov/
+.tox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Test results
+test-results/
+test-reports/
+junit.xml
+
+# =============================================================================
+# Docker & Containerization
+# =============================================================================
+
+# Docker
+.dockerignore.backup
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# =============================================================================
+# Cloud & Deployment
+# =============================================================================
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# AWS
+.aws/
+
+# =============================================================================
+# Documentation & Generated Files
+# =============================================================================
+
+# Generated documentation (keep source, ignore generated)
+# docs/swagger.json and docs/swagger.yaml are generated but kept for reference
+# docs/docs.go is generated but kept for reference
+
+# API documentation cache
+.swagger-codegen/
+.swagger-codegen-cli.jar
+
+# =============================================================================
+# Package Managers & Dependencies
+# =============================================================================
+
+# Node.js (if using for frontend/tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Python (if using for scripts/tooling)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# =============================================================================
+# Security & Secrets
+# =============================================================================
+
+# Private keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# JWT secrets
+jwt-secret*
+secret-key*
+
+# API keys
+api-keys*
+.secrets
+
+# =============================================================================
+# Performance & Profiling
+# =============================================================================
+
+# Go profiling
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+profile.out
+
+# Benchmarking
+benchmark.txt
+bench.out
+
+# =============================================================================
+# Backup & Archive Files
+# =============================================================================
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
+# Archive files
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+*.7z
+
+# =============================================================================
+# Project Specific
+# =============================================================================
+
+# Air live reload tool
+.air.toml
+tmp/
+
+# Migration files backup
+migrations/*.backup
+
+# Local development overrides
+docker-compose.local.yml
+.env.local
+
+# Generated mocks (if using mockery)
+mocks/
+*_mock.go
+
+# Local scripts
+scripts/local/
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary directories
+.sass-cache/
+.tmp/
+
+# Runtime directories
+run/
+var/
+
+# Lock files (keep go.sum, ignore others)
+package-lock.json
+yarn.lock
+
+# Local environment overrides
+.envrc
+
+
+# Kiro Vibe
+.kiro
