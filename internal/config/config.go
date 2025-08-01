@@ -26,6 +26,7 @@ type Config struct {
 	JWT      JWTConfig
 	CORS     CORSConfig
 	Rate     RateConfig
+	Redis    RedisConfig
 	Swagger  SwaggerConfig
 	Env      Environment
 }
@@ -66,6 +67,15 @@ type CORSConfig struct {
 type RateConfig struct {
 	Max    int           `json:"max"`
 	Window time.Duration `json:"window"`
+}
+
+// RedisConfig holds Redis-related configuration
+type RedisConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Password string `json:"-"` // Don't expose password in JSON
+	DB       int    `json:"db"`
+	Enabled  bool   `json:"enabled"`
 }
 
 // SwaggerConfig holds Swagger documentation configuration
@@ -183,6 +193,27 @@ func Load() (*Config, error) {
 		Window: rateWindow,
 	}
 
+	// Load Redis configuration
+	redisPort, err := strconv.Atoi(getEnv("REDIS_PORT", "6379"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid REDIS_PORT value: %v", err)
+	}
+	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", "0"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid REDIS_DB value: %v", err)
+	}
+	redisEnabled, err := strconv.ParseBool(getEnv("REDIS_ENABLED", "false"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid REDIS_ENABLED value: %v", err)
+	}
+	config.Redis = RedisConfig{
+		Host:     getEnv("REDIS_HOST", "localhost"),
+		Port:     redisPort,
+		Password: getEnv("REDIS_PASSWORD", ""),
+		DB:       redisDB,
+		Enabled:  redisEnabled,
+	}
+
 	// Load Swagger configuration
 	swaggerEnabled, err := strconv.ParseBool(getEnv("SWAGGER_ENABLED", "true"))
 	if err != nil {
@@ -226,6 +257,9 @@ func (c *Config) Validate() error {
 	}
 	if err := c.Rate.Validate(); err != nil {
 		return fmt.Errorf("rate config: %v", err)
+	}
+	if err := c.Redis.Validate(); err != nil {
+		return fmt.Errorf("redis config: %v", err)
 	}
 	return nil
 }
@@ -355,7 +389,28 @@ func (d *DatabaseConfig) GetAdminDSN() string {
 		d.Host, d.Port, d.User, d.Password, d.SSLMode)
 }
 
+// Validate validates Redis configuration
+func (r *RedisConfig) Validate() error {
+	if r.Enabled {
+		if r.Host == "" {
+			return fmt.Errorf("host cannot be empty when Redis is enabled")
+		}
+		if r.Port <= 0 || r.Port > 65535 {
+			return fmt.Errorf("port must be between 1 and 65535, got %d", r.Port)
+		}
+		if r.DB < 0 {
+			return fmt.Errorf("db must be non-negative, got %d", r.DB)
+		}
+	}
+	return nil
+}
+
 // GetServerAddress returns the server address in host:port format
 func (s *ServerConfig) GetServerAddress() string {
 	return fmt.Sprintf("%s:%d", s.Host, s.Port)
+}
+
+// GetRedisAddress returns the Redis address in host:port format
+func (r *RedisConfig) GetRedisAddress() string {
+	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }

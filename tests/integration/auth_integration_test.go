@@ -29,7 +29,7 @@ func TestAuthenticationFlow(t *testing.T) {
 	tokenBlacklistRepo := repositories.NewTokenBlacklistRepository(testContainer.DB)
 	txManager := repositories.NewTransactionManager(testContainer.DB)
 
-	authService := services.NewAuthService(testContainer.DB, txManager)
+	authService := services.NewAuthService(testContainer.DB, txManager, nil)
 	jwtManager := utils.NewJWTManager("test-secret-key", 15*time.Minute, 7*24*time.Hour)
 	jwtService := services.NewJWTService(jwtManager, tokenBlacklistRepo, txManager)
 
@@ -367,7 +367,7 @@ func TestConcurrentAuthentication(t *testing.T) {
 	tokenBlacklistRepo := repositories.NewTokenBlacklistRepository(testContainer.DB)
 	txManager := repositories.NewTransactionManager(testContainer.DB)
 
-	authService := services.NewAuthService(testContainer.DB, txManager)
+	authService := services.NewAuthService(testContainer.DB, txManager, nil)
 	jwtManager := utils.NewJWTManager("test-secret-key", 15*time.Minute, 7*24*time.Hour)
 	jwtService := services.NewJWTService(jwtManager, tokenBlacklistRepo, txManager)
 
@@ -482,7 +482,7 @@ func TestAuthenticationEdgeCases(t *testing.T) {
 	tokenBlacklistRepo := repositories.NewTokenBlacklistRepository(testContainer.DB)
 	txManager := repositories.NewTransactionManager(testContainer.DB)
 
-	authService := services.NewAuthService(testContainer.DB, txManager)
+	authService := services.NewAuthService(testContainer.DB, txManager, nil)
 	jwtManager := utils.NewJWTManager("test-secret-key", 15*time.Minute, 7*24*time.Hour)
 	jwtService := services.NewJWTService(jwtManager, tokenBlacklistRepo, txManager)
 
@@ -645,7 +645,7 @@ func TestAuthenticationPerformance(t *testing.T) {
 	tokenBlacklistRepo := repositories.NewTokenBlacklistRepository(testContainer.DB)
 	txManager := repositories.NewTransactionManager(testContainer.DB)
 
-	authService := services.NewAuthService(testContainer.DB, txManager)
+	authService := services.NewAuthService(testContainer.DB, txManager, nil)
 	jwtManager := utils.NewJWTManager("test-secret-key", 15*time.Minute, 7*24*time.Hour)
 	jwtService := services.NewJWTService(jwtManager, tokenBlacklistRepo, txManager)
 

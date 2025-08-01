@@ -54,17 +54,19 @@ type AuthResponse struct {
 
 // authServiceImpl is the concrete implementation of AuthService
 type authServiceImpl struct {
-	db        *gorm.DB
-	txManager repositories.TransactionManager
-	validator *utils.ValidationErrorFormatter
+	db                *gorm.DB
+	txManager         repositories.TransactionManager
+	validator         *utils.ValidationErrorFormatter
+	passwordValidator PasswordValidator
 }
 
 // NewAuthService creates a new instance of AuthService
-func NewAuthService(db *gorm.DB, txManager repositories.TransactionManager) AuthService {
+func NewAuthService(db *gorm.DB, txManager repositories.TransactionManager, passwordValidator PasswordValidator) AuthService {
 	return &authServiceImpl{
-		db:        db,
-		txManager: txManager,
-		validator: utils.NewValidationErrorFormatter(),
+		db:                db,
+		txManager:         txManager,
+		validator:         utils.NewValidationErrorFormatter(),
+		passwordValidator: passwordValidator,
 	}
 }
 
@@ -115,6 +117,15 @@ func (s *authServiceImpl) Register(ctx context.Context, req RegisterRequest) (*A
 		// Create user in database within transaction
 		if err := tx.Create(user).Error; err != nil {
 			return fmt.Errorf("failed to create user: %w", err)
+		}
+
+		// Add password to history if password validator is available
+		if s.passwordValidator != nil {
+			if err := s.passwordValidator.AddPasswordToHistory(ctx, user.ID, req.Password); err != nil {
+				// Log error but don't fail the registration
+				// In production, you might want to log this error properly
+				_ = err
+			}
 		}
 
 		return nil
@@ -175,50 +186,70 @@ func (s *authServiceImpl) Login(ctx context.Context, req LoginRequest) (*AuthRes
 
 // ValidatePassword checks if a password meets security requirements
 func (s *authServiceImpl) ValidatePassword(password string) error {
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters long")
-	}
+	if s.passwordValidator == nil {
+		// Fallback to original validation logic if no password validator is configured
+		if len(password) < 8 {
+			return errors.New("password must be at least 8 characters long")
+		}
 
-	// Check for at least one uppercase letter
-	hasUpper := false
-	// Check for at least one lowercase letter
-	hasLower := false
-	// Check for at least one digit
-	hasDigit := false
-	// Check for at least one special character
-	hasSpecial := false
+		// Check for at least one uppercase letter
+		hasUpper := false
+		// Check for at least one lowercase letter
+		hasLower := false
+		// Check for at least one digit
+		hasDigit := false
+		// Check for at least one special character
+		hasSpecial := false
 
-	for _, char := range password {
-		switch {
-		case char >= 'A' && char <= 'Z':
-			hasUpper = true
-		case char >= 'a' && char <= 'z':
-			hasLower = true
-		case char >= '0' && char <= '9':
-			hasDigit = true
-		case char >= 32 && char <= 126: // Printable ASCII characters
-			if !((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
-				hasSpecial = true
+		for _, char := range password {
+			switch {
+			case char >= 'A' && char <= 'Z':
+				hasUpper = true
+			case char >= 'a' && char <= 'z':
+				hasLower = true
+			case char >= '0' && char <= '9':
+				hasDigit = true
+			case char >= 32 && char <= 126: // Printable ASCII characters
+				if !((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+					hasSpecial = true
+				}
 			}
 		}
+
+		var missingRequirements []string
+		if !hasUpper {
+			missingRequirements = append(missingRequirements, "uppercase letter")
+		}
+		if !hasLower {
+			missingRequirements = append(missingRequirements, "lowercase letter")
+		}
+		if !hasDigit {
+			missingRequirements = append(missingRequirements, "digit")
+		}
+		if !hasSpecial {
+			missingRequirements = append(missingRequirements, "special character")
+		}
+
+		if len(missingRequirements) > 0 {
+			return fmt.Errorf("password must contain at least one %s", strings.Join(missingRequirements, ", "))
+		}
+
+		return nil
 	}
 
-	var missingRequirements []string
-	if !hasUpper {
-		missingRequirements = append(missingRequirements, "uppercase letter")
-	}
-	if !hasLower {
-		missingRequirements = append(missingRequirements, "lowercase letter")
-	}
-	if !hasDigit {
-		missingRequirements = append(missingRequirements, "digit")
-	}
-	if !hasSpecial {
-		missingRequirements = append(missingRequirements, "special character")
+	// Use the comprehensive password validator
+	result := s.passwordValidator.ValidateComplexity(password)
+	if !result.Valid {
+		// Return the first error as the primary validation error
+		if len(result.Errors) > 0 {
+			return errors.New(result.Errors[0])
+		}
+		return errors.New("password does not meet complexity requirements")
 	}
 
-	if len(missingRequirements) > 0 {
-		return fmt.Errorf("password must contain at least one %s", strings.Join(missingRequirements, ", "))
+	// Check against common passwords
+	if err := s.passwordValidator.CheckCommonPasswords(password); err != nil {
+		return err
 	}
 
 	return nil

@@ -114,3 +114,28 @@ type TransactionManager interface {
 	// SetIsolationLevel sets the transaction isolation level
 	SetIsolationLevel(tx *gorm.DB, isolationLevel string) error
 }
+
+// PasswordHistoryRepository defines the interface for password history operations
+type PasswordHistoryRepository interface {
+	BaseRepository[models.PasswordHistory]
+
+	// Create adds a new password history entry
+	CreatePasswordHistory(ctx context.Context, entry *models.PasswordHistory) error
+	CreatePasswordHistoryTx(tx *gorm.DB, entry *models.PasswordHistory) error
+
+	// GetRecentPasswords retrieves recent passwords for a user
+	GetRecentPasswords(ctx context.Context, userID uint, limit int) ([]*models.PasswordHistory, error)
+	GetRecentPasswordsTx(tx *gorm.DB, userID uint, limit int) ([]*models.PasswordHistory, error)
+
+	// CleanupOldPasswords removes old password history entries
+	CleanupOldPasswords(ctx context.Context, userID uint, keepCount int) error
+	CleanupOldPasswordsTx(tx *gorm.DB, userID uint, keepCount int) error
+
+	// DeleteByUserID removes all password history for a user
+	DeleteByUserID(ctx context.Context, userID uint) error
+	DeleteByUserIDTx(tx *gorm.DB, userID uint) error
+
+	// CountUserPasswords counts password history entries for a user
+	CountUserPasswords(ctx context.Context, userID uint) (int64, error)
+	CountUserPasswordsTx(tx *gorm.DB, userID uint) (int64, error)
+}

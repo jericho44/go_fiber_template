@@ -14,7 +14,10 @@ func TestSimple(t *testing.T) {
 
 func TestAuthService_ValidatePassword_Simple(t *testing.T) {
 	// Create a simple auth service without mocks
-	service := &authServiceImpl{}
+	service := &authServiceImpl{
+		validator: utils.NewValidationErrorFormatter(),
+		// passwordValidator is nil, so it will use fallback validation
+	}
 
 	err := service.ValidatePassword("Password123!")
 	assert.NoError(t, err)
@@ -24,7 +27,9 @@ func TestAuthService_ValidatePassword_Simple(t *testing.T) {
 }
 
 func TestAuthService_HashPassword_Simple(t *testing.T) {
-	service := &authServiceImpl{}
+	service := &authServiceImpl{
+		validator: utils.NewValidationErrorFormatter(),
+	}
 
 	password := "TestPassword123!"
 	hashedPassword, err := service.HashPassword(password)
@@ -35,7 +40,9 @@ func TestAuthService_HashPassword_Simple(t *testing.T) {
 }
 
 func TestAuthService_ComparePassword_Simple(t *testing.T) {
-	service := &authServiceImpl{}
+	service := &authServiceImpl{
+		validator: utils.NewValidationErrorFormatter(),
+	}
 
 	password := "TestPassword123!"
 	hashedPassword, err := service.HashPassword(password)
@@ -51,7 +58,10 @@ func TestAuthService_ComparePassword_Simple(t *testing.T) {
 }
 
 func TestAuthService_PasswordValidation_Comprehensive(t *testing.T) {
-	service := &authServiceImpl{}
+	service := &authServiceImpl{
+		validator: utils.NewValidationErrorFormatter(),
+		// passwordValidator is nil, so it will use fallback validation
+	}
 
 	tests := []struct {
 		name     string
@@ -132,7 +142,9 @@ func TestAuthService_PasswordValidation_Comprehensive(t *testing.T) {
 }
 
 func TestAuthService_HashPassword_Security(t *testing.T) {
-	service := &authServiceImpl{}
+	service := &authServiceImpl{
+		validator: utils.NewValidationErrorFormatter(),
+	}
 
 	t.Run("Same password produces different hashes", func(t *testing.T) {
 		password := "TestPassword123!"
@@ -175,7 +187,9 @@ func TestAuthService_HashPassword_Security(t *testing.T) {
 }
 
 func TestAuthService_ComparePassword_EdgeCases(t *testing.T) {
-	service := &authServiceImpl{}
+	service := &authServiceImpl{
+		validator: utils.NewValidationErrorFormatter(),
+	}
 
 	t.Run("Invalid hash format", func(t *testing.T) {
 		err := service.ComparePassword("invalid-hash", "password")
