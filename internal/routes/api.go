@@ -1,21 +1,19 @@
 package routes
 
 import (
-	"go-fiber-template/internal/config"
-
 	"github.com/gofiber/fiber/v2"
 )
 
 // SetupAPIRoutes configures all API routes for web/desktop applications
-func SetupAPIRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
+func SetupAPIRoutes(app *fiber.App, deps *Dependencies) {
 	// API v1 group
 	v1 := app.Group("/api/v1")
 
 	// Add API info endpoint for v1
 	v1.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Go Fiber Template API v1",
-			"version": "1.0.0",
+			"message":  "Go Fiber Template API v1",
+			"version":  "1.0.0",
 			"platform": "web/desktop",
 			"endpoints": fiber.Map{
 				"auth":  "/api/v1/auth",
@@ -25,14 +23,14 @@ func SetupAPIRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	})
 
 	// Authentication routes
-	SetupAuthAPIRoutes(v1, cfg, deps)
+	SetupAuthAPIRoutes(v1, deps)
 
 	// User management routes
-	SetupUserAPIRoutes(v1, cfg, deps)
+	SetupUserAPIRoutes(v1, deps)
 }
 
 // SetupAuthAPIRoutes configures authentication-related routes for API
-func SetupAuthAPIRoutes(api fiber.Router, cfg *config.Config, deps *Dependencies) {
+func SetupAuthAPIRoutes(api fiber.Router, deps *Dependencies) {
 	// Create auth group
 	auth := api.Group("/auth")
 
@@ -48,7 +46,7 @@ func SetupAuthAPIRoutes(api fiber.Router, cfg *config.Config, deps *Dependencies
 }
 
 // SetupUserAPIRoutes configures user management routes for API
-func SetupUserAPIRoutes(api fiber.Router, cfg *config.Config, deps *Dependencies) {
+func SetupUserAPIRoutes(api fiber.Router, deps *Dependencies) {
 	// Create users group with authentication middleware
 	users := api.Group("/users")
 	users.Use(deps.AuthMiddleware.RequireAuth())

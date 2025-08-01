@@ -1,21 +1,19 @@
 package routes
 
 import (
-	"go-fiber-template/internal/config"
-
 	"github.com/gofiber/fiber/v2"
 )
 
 // SetupMobileAPIRoutes configures mobile-specific API routes
-func SetupMobileAPIRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
+func SetupMobileAPIRoutes(app *fiber.App, deps *Dependencies) {
 	// Mobile API v1 group
 	mobile := app.Group("/api/mobile/v1")
 
 	// Mobile API info endpoint
 	mobile.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Go Fiber Template Mobile API v1",
-			"version": "1.0.0",
+			"message":  "Go Fiber Template Mobile API v1",
+			"version":  "1.0.0",
 			"platform": "mobile",
 			"endpoints": fiber.Map{
 				"auth":  "/api/mobile/v1/auth",
@@ -25,14 +23,14 @@ func SetupMobileAPIRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies
 	})
 
 	// Mobile authentication routes (same as API but with mobile-specific optimizations)
-	SetupAuthMobileRoutes(mobile, cfg, deps)
+	SetupAuthMobileRoutes(mobile, deps)
 
 	// Mobile user management routes (same as API but with mobile-specific responses)
-	SetupUserMobileRoutes(mobile, cfg, deps)
+	SetupUserMobileRoutes(mobile, deps)
 }
 
 // SetupAuthMobileRoutes configures authentication routes for mobile API
-func SetupAuthMobileRoutes(mobile fiber.Router, cfg *config.Config, deps *Dependencies) {
+func SetupAuthMobileRoutes(mobile fiber.Router, deps *Dependencies) {
 	// Create auth group for mobile
 	auth := mobile.Group("/auth")
 
@@ -78,7 +76,7 @@ func SetupAuthMobileRoutes(mobile fiber.Router, cfg *config.Config, deps *Depend
 }
 
 // SetupUserMobileRoutes configures user management routes for mobile API
-func SetupUserMobileRoutes(mobile fiber.Router, cfg *config.Config, deps *Dependencies) {
+func SetupUserMobileRoutes(mobile fiber.Router, deps *Dependencies) {
 	// Create users group with authentication middleware
 	users := mobile.Group("/users")
 	users.Use(deps.AuthMiddleware.RequireAuth())

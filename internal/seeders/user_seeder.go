@@ -76,12 +76,12 @@ func (s *UserSeeder) Seed(ctx context.Context, db *gorm.DB) error {
 		// Check if user already exists
 		var existingUser models.User
 		err := db.Where("email = ?", userData.Email).First(&existingUser).Error
-		
+
 		if err == nil {
 			// User already exists, skip
 			continue
 		}
-		
+
 		if err != gorm.ErrRecordNotFound {
 			return fmt.Errorf("failed to check existing user %s: %w", userData.Email, err)
 		}

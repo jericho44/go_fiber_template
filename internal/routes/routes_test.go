@@ -7,6 +7,7 @@ import (
 	"go-fiber-template/internal/config"
 	"go-fiber-template/internal/controllers"
 	"go-fiber-template/internal/middleware"
+	"go-fiber-template/internal/services"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,9 @@ func TestRoutesSetup(t *testing.T) {
 		Env: "test",
 	}
 
-	// Create mock dependencies (using nil for simplicity in this test)
+	// Create minimal dependencies for testing
+	healthService := services.NewHealthService()
+	healthController := controllers.NewHealthController(healthService)
 	deps := &Dependencies{
 		UserRepo:           nil,
 		TokenBlacklistRepo: nil,
@@ -33,6 +36,7 @@ func TestRoutesSetup(t *testing.T) {
 		AuthMiddleware:     nil,
 		AuthController:     nil,
 		UserController:     nil,
+		HealthController:   healthController,
 	}
 
 	// Test that SetupAllRoutes doesn't panic
@@ -44,7 +48,8 @@ func TestRoutesSetup(t *testing.T) {
 	req := httptest.NewRequest("GET", "/health", nil)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
-	assert.Equal(t, 200, resp.StatusCode)
+	// Health endpoint returns 503 when database is not available (expected in test environment)
+	assert.Equal(t, 503, resp.StatusCode)
 
 	// Test root endpoint
 	req = httptest.NewRequest("GET", "/", nil)
@@ -65,14 +70,22 @@ func TestHealthRoutes(t *testing.T) {
 		Env: "test",
 	}
 
+	// Create minimal dependencies for testing
+	healthService := services.NewHealthService()
+	healthController := controllers.NewHealthController(healthService)
+	deps := &Dependencies{
+		HealthController: healthController,
+	}
+
 	// Setup public routes (which includes health routes)
-	setupPublicRoutes(app, cfg)
+	setupPublicRoutes(app, cfg, deps)
 
 	// Test health endpoint
 	req := httptest.NewRequest("GET", "/health", nil)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
-	assert.Equal(t, 200, resp.StatusCode)
+	// Health endpoint returns 503 when database is not available (expected in test environment)
+	assert.Equal(t, 503, resp.StatusCode)
 
 	// Test root endpoint
 	req = httptest.NewRequest("GET", "/", nil)
@@ -107,12 +120,9 @@ func TestHealthRoutes(t *testing.T) {
 
 func TestDocumentationRoutes(t *testing.T) {
 	app := fiber.New()
-	cfg := &config.Config{
-		Env: "test",
-	}
 
 	// Setup documentation routes
-	setupDocumentationRoutes(app, cfg)
+	setupDocumentationRoutes(app)
 
 	// Test swagger redirect - the route should exist but may not work without proper setup
 	req := httptest.NewRequest("GET", "/swagger", nil)
@@ -124,9 +134,6 @@ func TestDocumentationRoutes(t *testing.T) {
 
 func TestRouteStructure(t *testing.T) {
 	app := fiber.New()
-	cfg := &config.Config{
-		Env: "test",
-	}
 
 	// Create minimal mock dependencies for route structure testing
 	deps := &Dependencies{
@@ -138,8 +145,8 @@ func TestRouteStructure(t *testing.T) {
 	// This should not panic even with minimal dependencies
 	assert.NotPanics(t, func() {
 		api := app.Group("/api/v1")
-		SetupAuthAPIRoutes(api, cfg, deps)
-		SetupUserAPIRoutes(api, cfg, deps)
+		SetupAuthAPIRoutes(api, deps)
+		SetupUserAPIRoutes(api, deps)
 	})
 }
 
@@ -149,8 +156,15 @@ func TestHelloWorldEndpoint(t *testing.T) {
 		Env: "test",
 	}
 
+	// Create minimal dependencies for testing
+	healthService := services.NewHealthService()
+	healthController := controllers.NewHealthController(healthService)
+	deps := &Dependencies{
+		HealthController: healthController,
+	}
+
 	// Setup public routes
-	setupPublicRoutes(app, cfg)
+	setupPublicRoutes(app, cfg, deps)
 
 	// Test basic hello world
 	req := httptest.NewRequest("GET", "/hello", nil)

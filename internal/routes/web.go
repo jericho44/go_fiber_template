@@ -1,14 +1,13 @@
 package routes
 
 import (
-	"go-fiber-template/internal/config"
 	"go-fiber-template/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 // SetupWebRoutes configures web interface routes for future web UI
-func SetupWebRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
+func SetupWebRoutes(app *fiber.App, deps *Dependencies) {
 	// Web routes group
 	web := app.Group("/web")
 
@@ -28,16 +27,16 @@ func SetupWebRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	// Web authentication routes (placeholder)
 	web.Get("/login", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Web login page placeholder",
-			"note":    "This endpoint is reserved for future web login page",
+			"message":     "Web login page placeholder",
+			"note":        "This endpoint is reserved for future web login page",
 			"form_action": "/api/v1/auth/login",
 		})
 	})
 
 	web.Get("/register", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Web register page placeholder",
-			"note":    "This endpoint is reserved for future web registration page",
+			"message":     "Web register page placeholder",
+			"note":        "This endpoint is reserved for future web registration page",
 			"form_action": "/api/v1/auth/register",
 		})
 	})
@@ -45,8 +44,8 @@ func SetupWebRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	// Web dashboard (placeholder)
 	web.Get("/dashboard", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Web dashboard placeholder",
-			"note":    "This endpoint is reserved for future web dashboard",
+			"message":   "Web dashboard placeholder",
+			"note":      "This endpoint is reserved for future web dashboard",
 			"timestamp": utils.GetCurrentTimestamp(),
 		})
 	})
@@ -54,8 +53,8 @@ func SetupWebRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	// Web profile page (placeholder)
 	web.Get("/profile", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Web profile page placeholder",
-			"note":    "This endpoint is reserved for future web profile page",
+			"message":      "Web profile page placeholder",
+			"note":         "This endpoint is reserved for future web profile page",
 			"api_endpoint": "/api/v1/users/profile",
 		})
 	})
@@ -63,8 +62,8 @@ func SetupWebRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	// Web user management (placeholder)
 	web.Get("/users", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Web users page placeholder",
-			"note":    "This endpoint is reserved for future web user management page",
+			"message":      "Web users page placeholder",
+			"note":         "This endpoint is reserved for future web user management page",
 			"api_endpoint": "/api/v1/users",
 		})
 	})

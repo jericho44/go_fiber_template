@@ -53,15 +53,15 @@ func (b *BaseSeeder) Rollback(ctx context.Context, db *gorm.DB) error {
 func (b *BaseSeeder) ShouldRun(ctx context.Context, db *gorm.DB) (bool, error) {
 	var execution SeederExecution
 	err := db.Where("name = ? AND success = ?", b.name, true).First(&execution).Error
-	
+
 	if err == gorm.ErrRecordNotFound {
 		return true, nil // Should run if no successful execution found
 	}
-	
+
 	if err != nil {
 		return false, fmt.Errorf("failed to check seeder execution status: %w", err)
 	}
-	
+
 	return false, nil // Should not run if successful execution found
 }
 
@@ -72,7 +72,7 @@ func (b *BaseSeeder) MarkAsExecuted(ctx context.Context, db *gorm.DB) error {
 		RunAt:   ctx.Value("run_time").(int64),
 		Success: true,
 	}
-	
+
 	// Use UPSERT to handle duplicate executions
 	return db.Save(&execution).Error
 }
@@ -85,7 +85,7 @@ func (b *BaseSeeder) MarkAsFailed(ctx context.Context, db *gorm.DB, err error) e
 		Success: false,
 		Error:   err.Error(),
 	}
-	
+
 	return db.Save(&execution).Error
 }
 

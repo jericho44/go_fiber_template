@@ -1,0 +1,48 @@
+#!/bin/sh
+# Git commit message validation hook
+# This hook validates commit messages according to conventional commit format
+
+commit_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,50}'
+
+error_msg="Aborting commit. Your commit message is invalid. See .gitmessage for the expected format.
+
+The commit message should follow this format:
+<type>(<scope>): <subject>
+
+Where:
+- type: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+- scope: optional, name of the package affected
+- subject: imperative, present tense, no more than 50 characters
+
+Examples:
+- feat(auth): add JWT token refresh functionality
+- fix: resolve database connection timeout issue
+- docs: update API documentation for user endpoints"
+
+# Check if commit message matches the pattern
+if ! grep -qE "$commit_regex" "$1"; then
+    echo "$error_msg" >&2
+    exit 1
+fi
+
+# Check if subject line is too long
+subject_line=$(head -n1 "$1")
+if [ ${#subject_line} -gt 72 ]; then
+    echo "Aborting commit. Subject line is too long (${#subject_line} characters). Maximum is 72 characters." >&2
+    exit 1
+fi
+
+# Check if subject line ends with a period
+if echo "$subject_line" | grep -q '\.$'; then
+    echo "Aborting commit. Subject line should not end with a period." >&2
+    exit 1
+fi
+
+# Check if subject line starts with uppercase (after type and scope)
+subject_part=$(echo "$subject_line" | sed 's/^[^:]*: *//')
+if echo "$subject_part" | grep -q '^[A-Z]'; then
+    echo "Aborting commit. Subject should not start with uppercase letter." >&2
+    exit 1
+fi
+
+exit 0

@@ -1,0 +1,40 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Type should be one of the following:
+# * feat: A new feature
+# * fix: A bug fix
+# * docs: Documentation only changes
+# * style: Changes that do not affect the meaning of the code
+# * refactor: A code change that neither fixes a bug nor adds a feature
+# * perf: A code change that improves performance
+# * test: Adding missing tests or correcting existing tests
+# * build: Changes that affect the build system or external dependencies
+# * ci: Changes to our CI configuration files and scripts
+# * chore: Other changes that don't modify src or test files
+# * revert: Reverts a previous commit
+
+# Scope is optional and should be the name of the package affected
+
+# Subject line should:
+# * Use imperative, present tense: "change" not "changed" nor "changes"
+# * Not capitalize first letter
+# * Not end with a dot (.)
+# * Be no more than 50 characters
+
+# Body should include the motivation for the change and contrast this
+# with previous behavior. Wrap at 72 characters.
+
+# Footer should contain any information about Breaking Changes and is also
+# the place to reference GitHub issues that this commit Closes.
+
+# Example:
+# feat(auth): add JWT token refresh functionality
+#
+# Implement automatic token refresh when access token expires.
+# This improves user experience by avoiding forced re-login.
+#
+# Closes #123

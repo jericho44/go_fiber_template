@@ -31,33 +31,34 @@ type Dependencies struct {
 	AuthMiddleware *middleware.AuthMiddleware
 
 	// Controllers
-	AuthController *controllers.AuthController
-	UserController *controllers.UserController
+	AuthController   *controllers.AuthController
+	UserController   *controllers.UserController
+	HealthController *controllers.HealthController
 }
 
 // SetupAllRoutes configures all application routes
 func SetupAllRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	// Setup public routes (no authentication required)
-	setupPublicRoutes(app, cfg)
+	setupPublicRoutes(app, cfg, deps)
 
 	// Setup API routes
-	SetupAPIRoutes(app, cfg, deps)
+	SetupAPIRoutes(app, deps)
 
 	// Setup web routes (if needed for future web interface)
-	SetupWebRoutes(app, cfg, deps)
+	SetupWebRoutes(app, deps)
 
 	// Setup mobile API routes (if needed for mobile-specific endpoints)
-	SetupMobileAPIRoutes(app, cfg, deps)
+	SetupMobileAPIRoutes(app, deps)
 
 	// Setup documentation routes
-	setupDocumentationRoutes(app, cfg)
+	setupDocumentationRoutes(app)
 
 	// Setup 404 handler (must be last)
 	setup404Handler(app)
 }
 
 // setupPublicRoutes configures public routes that don't require authentication
-func setupPublicRoutes(app *fiber.App, cfg *config.Config) {
+func setupPublicRoutes(app *fiber.App, cfg *config.Config, deps *Dependencies) {
 	// Root endpoint - Welcome message with available endpoints
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
@@ -79,7 +80,7 @@ func setupPublicRoutes(app *fiber.App, cfg *config.Config) {
 	app.Get("/hello", func(c *fiber.Ctx) error {
 		name := c.Query("name", "World")
 		lang := c.Query("lang", "en")
-		
+
 		greetings := map[string]string{
 			"en": "Hello",
 			"es": "Hola",
@@ -92,12 +93,12 @@ func setupPublicRoutes(app *fiber.App, cfg *config.Config) {
 			"ko": "안녕하세요",
 			"zh": "你好",
 		}
-		
+
 		greeting, exists := greetings[lang]
 		if !exists {
 			greeting = greetings["en"] // Default to English
 		}
-		
+
 		return c.JSON(fiber.Map{
 			"message":   greeting + ", " + name + "!",
 			"language":  lang,
@@ -108,20 +109,7 @@ func setupPublicRoutes(app *fiber.App, cfg *config.Config) {
 	})
 
 	// Health check endpoint - Service health status
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"status":    "healthy",
-			"service":   "go-fiber-template",
-			"version":   "1.0.0",
-			"timestamp": utils.GetCurrentTimestamp(),
-			"uptime":    "Available", // Could be enhanced with actual uptime calculation
-			"checks": fiber.Map{
-				"database":    "connected", // This could be enhanced with actual DB health check
-				"memory":      "normal",
-				"disk_space":  "sufficient",
-			},
-		})
-	})
+	app.Get("/health", deps.HealthController.CheckHealth)
 
 	// API information endpoint - Service information and available endpoints
 	app.Get("/info", func(c *fiber.Ctx) error {
@@ -159,20 +147,14 @@ func setupPublicRoutes(app *fiber.App, cfg *config.Config) {
 	})
 
 	// Ping endpoint - Simple connectivity test
-	app.Get("/ping", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"message":   "pong",
-			"timestamp": utils.GetCurrentTimestamp(),
-			"latency":   "< 1ms", // This could be enhanced with actual latency measurement
-		})
-	})
+	app.Get("/ping", deps.HealthController.CheckHealthSimple)
 }
 
 // setupDocumentationRoutes configures API documentation routes
-func setupDocumentationRoutes(app *fiber.App, cfg *config.Config) {
+func setupDocumentationRoutes(app *fiber.App) {
 	// Swagger documentation
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
-	
+
 	// Redirect /swagger to /swagger/
 	app.Get("/swagger", func(c *fiber.Ctx) error {
 		return c.Redirect("/swagger/")

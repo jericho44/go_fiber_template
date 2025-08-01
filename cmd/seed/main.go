@@ -56,8 +56,8 @@ func init() {
 // runCommand handles seeder run operations
 func newRunCommand(manager seeders.SeederManager, registry *seeders.Registry) *cobra.Command {
 	var (
-		all    bool
-		names  []string
+		all     bool
+		names   []string
 		envOnly bool
 	)
 
@@ -189,10 +189,10 @@ func newStatusCommand(manager seeders.SeederManager) *cobra.Command {
 					statusStr = "Error"
 				}
 
-				fmt.Printf("%-25s %-10s %-20s %s\n", 
-					status.Name, 
-					statusStr, 
-					lastRun, 
+				fmt.Printf("%-25s %-10s %-20s %s\n",
+					status.Name,
+					statusStr,
+					lastRun,
 					status.Description)
 			}
 
@@ -226,9 +226,9 @@ func newListCommand(manager seeders.SeederManager) *cobra.Command {
 					deps = strings.Join(info.Dependencies, ", ")
 				}
 
-				fmt.Printf("%-25s %-15s %s\n", 
-					info.Name, 
-					deps, 
+				fmt.Printf("%-25s %-15s %s\n",
+					info.Name,
+					deps,
 					info.Description)
 			}
 

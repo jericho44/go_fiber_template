@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go-fiber-template/internal/models"
+	"go-fiber-template/internal/seeders"
 
 	"gorm.io/gorm"
 )
@@ -12,13 +13,13 @@ import (
 // ExampleProductSeeder demonstrates how to create a custom seeder
 // This is an example seeder that would seed a hypothetical products table
 type ExampleProductSeeder struct {
-	*BaseSeeder
+	*seeders.BaseSeeder
 }
 
 // NewExampleProductSeeder creates a new example product seeder
 func NewExampleProductSeeder() *ExampleProductSeeder {
 	return &ExampleProductSeeder{
-		BaseSeeder: NewBaseSeeder(
+		BaseSeeder: seeders.NewBaseSeeder(
 			"example_product_seeder",
 			"Example seeder that demonstrates how to create custom seeders for a products table",
 			// Optional: Add dependencies if this seeder depends on other seeders
@@ -76,12 +77,12 @@ func (s *ExampleProductSeeder) Seed(ctx context.Context, db *gorm.DB) error {
 		// Check if product already exists by SKU
 		// var existingProduct models.Product
 		// err := db.Where("sku = ?", productData.SKU).First(&existingProduct).Error
-		
+
 		// if err == nil {
 		// 	// Product already exists, skip
 		// 	continue
 		// }
-		
+
 		// if err != gorm.ErrRecordNotFound {
 		// 	return fmt.Errorf("failed to check existing product %s: %w", productData.SKU, err)
 		// }
@@ -100,7 +101,7 @@ func (s *ExampleProductSeeder) Seed(ctx context.Context, db *gorm.DB) error {
 		// }
 
 		// For demonstration purposes, we'll just log what would be created
-		fmt.Printf("Would create product: %s (SKU: %s) - $%.2f\n", 
+		fmt.Printf("Would create product: %s (SKU: %s) - $%.2f\n",
 			productData.Name, productData.SKU, productData.Price)
 	}
 
@@ -112,7 +113,7 @@ func (s *ExampleProductSeeder) Rollback(ctx context.Context, db *gorm.DB) error 
 	// Define SKUs of seeded products
 	seededSKUs := []string{
 		"WH001",
-		"BS001", 
+		"BS001",
 		"UC001",
 		"LS001",
 	}
@@ -152,12 +153,12 @@ func (s *ExampleProductSeeder) ShouldRun(ctx context.Context, db *gorm.DB) (bool
 
 // Example of a more complex seeder with relationships
 type ExampleOrderSeeder struct {
-	*BaseSeeder
+	*seeders.BaseSeeder
 }
 
 func NewExampleOrderSeeder() *ExampleOrderSeeder {
 	return &ExampleOrderSeeder{
-		BaseSeeder: NewBaseSeeder(
+		BaseSeeder: seeders.NewBaseSeeder(
 			"example_order_seeder",
 			"Example seeder that creates sample orders with user and product relationships",
 			"user_seeder", "example_product_seeder", // Dependencies
@@ -183,7 +184,7 @@ func (s *ExampleOrderSeeder) Seed(ctx context.Context, db *gorm.DB) error {
 		// 2. Create OrderItem records linking to products
 		// 3. Calculate totals, taxes, etc.
 
-		fmt.Printf("Would create order #%d for user %s (%s)\n", 
+		fmt.Printf("Would create order #%d for user %s (%s)\n",
 			i+1, user.Email, user.FirstName+" "+user.LastName)
 	}
 
@@ -197,13 +198,13 @@ func (s *ExampleOrderSeeder) Rollback(ctx context.Context, db *gorm.DB) error {
 }
 
 // How to register these example seeders:
-// 
+//
 // In internal/seeders/registry.go, add to registerAllSeeders():
 //
 // func (r *Registry) registerAllSeeders() {
 //     // Existing seeders
 //     r.manager.RegisterSeeder(NewUserSeeder())
-//     
+//
 //     // Example seeders (only in development)
 //     if r.config.IsDevelopment() {
 //         r.manager.RegisterSeeder(NewDemoDataSeeder())

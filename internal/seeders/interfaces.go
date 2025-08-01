@@ -10,19 +10,19 @@ import (
 type Seeder interface {
 	// GetName returns the unique name of the seeder
 	GetName() string
-	
+
 	// GetDescription returns a description of what this seeder does
 	GetDescription() string
-	
+
 	// GetDependencies returns a list of seeder names that must run before this one
 	GetDependencies() []string
-	
+
 	// Seed executes the seeding logic
 	Seed(ctx context.Context, db *gorm.DB) error
-	
+
 	// Rollback removes the seeded data (optional, can return nil if not supported)
 	Rollback(ctx context.Context, db *gorm.DB) error
-	
+
 	// ShouldRun determines if this seeder should run based on current database state
 	ShouldRun(ctx context.Context, db *gorm.DB) (bool, error)
 }
@@ -31,25 +31,25 @@ type Seeder interface {
 type SeederManager interface {
 	// RegisterSeeder registers a new seeder
 	RegisterSeeder(seeder Seeder) error
-	
+
 	// RunAll runs all registered seeders in dependency order
 	RunAll(ctx context.Context) error
-	
+
 	// RunSeeder runs a specific seeder by name
 	RunSeeder(ctx context.Context, name string) error
-	
+
 	// RunSeeders runs specific seeders by names
 	RunSeeders(ctx context.Context, names []string) error
-	
+
 	// RollbackSeeder rollbacks a specific seeder by name
 	RollbackSeeder(ctx context.Context, name string) error
-	
+
 	// RollbackAll rollbacks all seeders in reverse dependency order
 	RollbackAll(ctx context.Context) error
-	
+
 	// ListSeeders returns information about all registered seeders
 	ListSeeders() []SeederInfo
-	
+
 	// GetSeederStatus returns the status of seeders
 	GetSeederStatus(ctx context.Context) ([]SeederStatus, error)
 }
