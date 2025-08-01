@@ -58,15 +58,17 @@ type authServiceImpl struct {
 	txManager         repositories.TransactionManager
 	validator         *utils.ValidationErrorFormatter
 	passwordValidator PasswordValidator
+	accountLocker     AccountLocker
 }
 
 // NewAuthService creates a new instance of AuthService
-func NewAuthService(db *gorm.DB, txManager repositories.TransactionManager, passwordValidator PasswordValidator) AuthService {
+func NewAuthService(db *gorm.DB, txManager repositories.TransactionManager, passwordValidator PasswordValidator, accountLocker AccountLocker) AuthService {
 	return &authServiceImpl{
 		db:                db,
 		txManager:         txManager,
 		validator:         utils.NewValidationErrorFormatter(),
 		passwordValidator: passwordValidator,
+		accountLocker:     accountLocker,
 	}
 }
 
@@ -149,33 +151,73 @@ func (s *authServiceImpl) Login(ctx context.Context, req LoginRequest) (*AuthRes
 		return nil, err
 	}
 
+	email := strings.ToLower(req.Email)
+
+	// Check if account is locked before attempting login
+	if s.accountLocker != nil {
+		isLocked, err := s.accountLocker.IsAccountLocked(ctx, email)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check account lock status: %w", err)
+		}
+		if isLocked {
+			return nil, utils.NewUnauthorizedError("Account is temporarily locked due to multiple failed login attempts")
+		}
+	}
+
 	// Use transaction for login to ensure consistency
 	var user *models.User
+	var loginError error
+
 	err := s.txManager.WithTransactionContext(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		// Get user by email directly using GORM
 		user = &models.User{}
-		if err := tx.Where("email = ?", strings.ToLower(req.Email)).First(user).Error; err != nil {
+		if err := tx.Where("email = ?", email).First(user).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return utils.NewUnauthorizedError("Invalid email or password")
+				loginError = utils.NewUnauthorizedError("Invalid email or password")
+				return loginError
 			}
 			return fmt.Errorf("failed to get user by email: %w", err)
 		}
 
 		// Check if user is active
 		if !user.IsActive {
-			return utils.NewUnauthorizedError("Account is deactivated")
+			loginError = utils.NewUnauthorizedError("Account is deactivated")
+			return loginError
 		}
 
 		// Verify password
 		if err := s.ComparePassword(user.Password, req.Password); err != nil {
-			return utils.NewUnauthorizedError("Invalid email or password")
+			loginError = utils.NewUnauthorizedError("Invalid email or password")
+			return loginError
 		}
 
 		return nil
 	})
 
+	// Handle failed login attempts
+	if loginError != nil {
+		if s.accountLocker != nil {
+			// Record failed attempt (this may lock the account)
+			if recordErr := s.accountLocker.RecordFailedAttempt(ctx, email); recordErr != nil {
+				// Log the error but don't expose it to the user
+				// In production, you should log this properly
+				_ = recordErr
+			}
+		}
+		return nil, loginError
+	}
+
 	if err != nil {
 		return nil, err
+	}
+
+	// Successful login - reset failed attempts
+	if s.accountLocker != nil {
+		if resetErr := s.accountLocker.ResetFailedAttempts(ctx, email); resetErr != nil {
+			// Log the error but don't fail the login
+			// In production, you should log this properly
+			_ = resetErr
+		}
 	}
 
 	return &AuthResponse{

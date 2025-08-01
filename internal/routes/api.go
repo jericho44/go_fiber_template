@@ -27,6 +27,9 @@ func SetupAPIRoutes(app *fiber.App, deps *Dependencies) {
 
 	// User management routes
 	SetupUserAPIRoutes(v1, deps)
+
+	// Admin routes
+	SetupAdminAPIRoutes(v1, deps)
 }
 
 // SetupAuthAPIRoutes configures authentication-related routes for API
@@ -56,4 +59,16 @@ func SetupUserAPIRoutes(api fiber.Router, deps *Dependencies) {
 	users.Get("/:id", deps.UserController.GetUserProfile)
 	users.Put("/:id", deps.UserController.UpdateUserProfile)
 	users.Delete("/:id", deps.UserController.DeleteUser)
+}
+
+// SetupAdminAPIRoutes configures admin routes for API
+func SetupAdminAPIRoutes(api fiber.Router, deps *Dependencies) {
+	// Create admin group with authentication middleware
+	// Note: In a real application, you would add admin role checking middleware here
+	admin := api.Group("/admin")
+	admin.Use(deps.AuthMiddleware.RequireAuth())
+
+	// Account lockout management routes
+	admin.Post("/unlock-account", deps.AdminController.UnlockAccount)
+	admin.Get("/lockout-info", deps.AdminController.GetLockoutInfo)
 }

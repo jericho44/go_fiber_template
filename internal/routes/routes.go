@@ -34,6 +34,7 @@ type Dependencies struct {
 	AuthController   *controllers.AuthController
 	UserController   *controllers.UserController
 	HealthController *controllers.HealthController
+	AdminController  *controllers.AdminController
 }
 
 // SetupAllRoutes configures all application routes
