@@ -28,6 +28,7 @@ type Config struct {
 	Rate     RateConfig
 	Redis    RedisConfig
 	Swagger  SwaggerConfig
+	Request  RequestConfig
 	Env      Environment
 }
 
@@ -83,6 +84,15 @@ type SwaggerConfig struct {
 	Enabled  bool   `json:"enabled"`
 	Host     string `json:"host"`
 	BasePath string `json:"base_path"`
+}
+
+// RequestConfig holds request size and validation configuration
+type RequestConfig struct {
+	MaxBodySize        int64    `json:"max_body_size"`       // Maximum request body size in bytes
+	MaxFileSize        int64    `json:"max_file_size"`       // Maximum file upload size in bytes
+	MaxMultipartSize   int64    `json:"max_multipart_size"`  // Maximum multipart form size in bytes
+	AllowedMimeTypes   []string `json:"allowed_mime_types"`  // Allowed MIME types for file uploads
+	EnableSanitization bool     `json:"enable_sanitization"` // Enable request sanitization
 }
 
 // Load loads configuration from environment variables
@@ -225,6 +235,39 @@ func Load() (*Config, error) {
 		BasePath: getEnv("SWAGGER_BASE_PATH", "/api/v1"),
 	}
 
+	// Load request configuration
+	maxBodySize, err := strconv.ParseInt(getEnv("REQUEST_MAX_BODY_SIZE", "10485760"), 10, 64) // 10MB default
+	if err != nil {
+		return nil, fmt.Errorf("invalid REQUEST_MAX_BODY_SIZE value: %v", err)
+	}
+	maxFileSize, err := strconv.ParseInt(getEnv("REQUEST_MAX_FILE_SIZE", "52428800"), 10, 64) // 50MB default
+	if err != nil {
+		return nil, fmt.Errorf("invalid REQUEST_MAX_FILE_SIZE value: %v", err)
+	}
+	maxMultipartSize, err := strconv.ParseInt(getEnv("REQUEST_MAX_MULTIPART_SIZE", "104857600"), 10, 64) // 100MB default
+	if err != nil {
+		return nil, fmt.Errorf("invalid REQUEST_MAX_MULTIPART_SIZE value: %v", err)
+	}
+	enableSanitization, err := strconv.ParseBool(getEnv("REQUEST_ENABLE_SANITIZATION", "true"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid REQUEST_ENABLE_SANITIZATION value: %v", err)
+	}
+
+	// Parse allowed MIME types
+	allowedMimeTypesStr := getEnv("REQUEST_ALLOWED_MIME_TYPES", "image/jpeg,image/png,image/gif,image/webp,application/pdf,text/plain,application/json,application/xml")
+	allowedMimeTypes := strings.Split(allowedMimeTypesStr, ",")
+	for i, mimeType := range allowedMimeTypes {
+		allowedMimeTypes[i] = strings.TrimSpace(mimeType)
+	}
+
+	config.Request = RequestConfig{
+		MaxBodySize:        maxBodySize,
+		MaxFileSize:        maxFileSize,
+		MaxMultipartSize:   maxMultipartSize,
+		AllowedMimeTypes:   allowedMimeTypes,
+		EnableSanitization: enableSanitization,
+	}
+
 	// Validate configuration
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("configuration validation failed: %v", err)
@@ -260,6 +303,9 @@ func (c *Config) Validate() error {
 	}
 	if err := c.Redis.Validate(); err != nil {
 		return fmt.Errorf("redis config: %v", err)
+	}
+	if err := c.Request.Validate(); err != nil {
+		return fmt.Errorf("request config: %v", err)
 	}
 	return nil
 }
@@ -413,4 +459,29 @@ func (s *ServerConfig) GetServerAddress() string {
 // GetRedisAddress returns the Redis address in host:port format
 func (r *RedisConfig) GetRedisAddress() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
+}
+
+// Validate validates request configuration
+func (r *RequestConfig) Validate() error {
+	if r.MaxBodySize <= 0 {
+		return fmt.Errorf("max_body_size must be positive, got %d", r.MaxBodySize)
+	}
+	if r.MaxFileSize <= 0 {
+		return fmt.Errorf("max_file_size must be positive, got %d", r.MaxFileSize)
+	}
+	if r.MaxMultipartSize <= 0 {
+		return fmt.Errorf("max_multipart_size must be positive, got %d", r.MaxMultipartSize)
+	}
+	if r.MaxFileSize > r.MaxMultipartSize {
+		return fmt.Errorf("max_file_size (%d) cannot be greater than max_multipart_size (%d)", r.MaxFileSize, r.MaxMultipartSize)
+	}
+	if len(r.AllowedMimeTypes) == 0 {
+		return fmt.Errorf("at least one allowed MIME type must be specified")
+	}
+	for _, mimeType := range r.AllowedMimeTypes {
+		if mimeType == "" {
+			return fmt.Errorf("MIME type cannot be empty")
+		}
+	}
+	return nil
 }

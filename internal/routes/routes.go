@@ -28,7 +28,8 @@ type Dependencies struct {
 	JWTManager *utils.JWTManager
 
 	// Middleware
-	AuthMiddleware *middleware.AuthMiddleware
+	AuthMiddleware              *middleware.AuthMiddleware
+	RequestValidationMiddleware *middleware.RequestValidationMiddleware
 
 	// Controllers
 	AuthController   *controllers.AuthController

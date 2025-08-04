@@ -21,9 +21,12 @@ const (
 
 // JWTClaims represents the claims in a JWT token
 type JWTClaims struct {
-	UserID    uint      `json:"user_id"`
-	Email     string    `json:"email"`
-	TokenType TokenType `json:"token_type"`
+	UserID            uint      `json:"user_id"`
+	Email             string    `json:"email"`
+	TokenType         TokenType `json:"token_type"`
+	SessionID         string    `json:"session_id"`
+	DeviceFingerprint string    `json:"device_fingerprint"`
+	IPAddress         string    `json:"ip_address"`
 	jwt.RegisteredClaims
 }
 
@@ -33,6 +36,16 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh_token"`
 	ExpiresAt    int64  `json:"expires_at"`
 	TokenType    string `json:"token_type"`
+	SessionID    string `json:"session_id"`
+}
+
+// TokenContext represents the context for token generation
+type TokenContext struct {
+	UserID            uint
+	Email             string
+	SessionID         string
+	DeviceFingerprint string
+	IPAddress         string
 }
 
 // JWTManager handles JWT token operations
@@ -51,7 +64,7 @@ func NewJWTManager(secret string, accessExpiry, refreshExpiry time.Duration) *JW
 	}
 }
 
-// GenerateTokenPair generates both access and refresh tokens for a user
+// GenerateTokenPair generates both access and refresh tokens for a user (legacy method)
 func (j *JWTManager) GenerateTokenPair(userID uint, email string) (*TokenPair, error) {
 	// Generate access token
 	accessToken, err := j.GenerateToken(userID, email, AccessToken)
@@ -73,7 +86,30 @@ func (j *JWTManager) GenerateTokenPair(userID uint, email string) (*TokenPair, e
 	}, nil
 }
 
-// GenerateToken generates a JWT token for a user
+// GenerateTokenPairWithContext generates both access and refresh tokens with session context
+func (j *JWTManager) GenerateTokenPairWithContext(ctx TokenContext) (*TokenPair, error) {
+	// Generate access token with context
+	accessToken, err := j.GenerateTokenWithContext(ctx, AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	// Generate refresh token with context
+	refreshToken, err := j.GenerateTokenWithContext(ctx, RefreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+	}
+
+	return &TokenPair{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresAt:    time.Now().Add(j.accessExpiry).Unix(),
+		TokenType:    "Bearer",
+		SessionID:    ctx.SessionID,
+	}, nil
+}
+
+// GenerateToken generates a JWT token for a user (legacy method)
 func (j *JWTManager) GenerateToken(userID uint, email string, tokenType TokenType) (string, error) {
 	var expiry time.Duration
 	switch tokenType {
@@ -96,6 +132,44 @@ func (j *JWTManager) GenerateToken(userID uint, email string, tokenType TokenTyp
 			NotBefore: jwt.NewNumericDate(now),
 			Issuer:    "go-fiber-template",
 			Subject:   fmt.Sprintf("user:%d", userID),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(j.secret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// GenerateTokenWithContext generates a JWT token with session context
+func (j *JWTManager) GenerateTokenWithContext(ctx TokenContext, tokenType TokenType) (string, error) {
+	var expiry time.Duration
+	switch tokenType {
+	case AccessToken:
+		expiry = j.accessExpiry
+	case RefreshToken:
+		expiry = j.refreshExpiry
+	default:
+		return "", errors.New("invalid token type")
+	}
+
+	now := time.Now()
+	claims := JWTClaims{
+		UserID:            ctx.UserID,
+		Email:             ctx.Email,
+		TokenType:         tokenType,
+		SessionID:         ctx.SessionID,
+		DeviceFingerprint: ctx.DeviceFingerprint,
+		IPAddress:         ctx.IPAddress,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(now.Add(expiry)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			Issuer:    "go-fiber-template",
+			Subject:   fmt.Sprintf("user:%d", ctx.UserID),
 		},
 	}
 

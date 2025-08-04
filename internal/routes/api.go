@@ -6,8 +6,13 @@ import (
 
 // SetupAPIRoutes configures all API routes for web/desktop applications
 func SetupAPIRoutes(app *fiber.App, deps *Dependencies) {
-	// API v1 group
+	// API v1 group with request validation middleware
 	v1 := app.Group("/api/v1")
+
+	// Apply request validation middleware to all API routes
+	if deps.RequestValidationMiddleware != nil {
+		v1.Use(deps.RequestValidationMiddleware.CombinedRequestValidation())
+	}
 
 	// Add API info endpoint for v1
 	v1.Get("/", func(c *fiber.Ctx) error {
